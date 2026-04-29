@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek V4 智能编码助手</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        textarea, input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+            margin-bottom: 16px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.1s, background 0.2s;
+        }
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .output {
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow: auto;
+        }
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        label {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .status {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 8px;
+        }
+        .row-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .row-2col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🤖 DeepSeek V4 · 智能编码助手</h1>
+    <div style="text-align: center; color: rgba(255,255,255,0.7); font-size: 14px; margin: -10px 0 20px 0;">
+        作者：苏渡苇 · <a href="https://github.com/iweidujiang" target="_blank" style="color: white; text-decoration: underline;">https://github.com/iweidujiang</a> · 公众号：苏渡苇
+    </div>
+
+    <div class="row-2col">
+        <!-- 代码生成模块 -->
+        <div class="card">
+            <h2>⚡ 代码生成</h2>
+            <label>需求描述</label>
+            <textarea id="requirement" rows="4" placeholder="例如：实现一个Spring Boot的REST控制器，支持对用户信息的增删改查，使用JPA和MySQL"></textarea>
+            <div class="flex-row">
+                <div style="flex:1">
+                    <label>语言</label>
+                    <select id="language">
+                        <option value="java">Java</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                    </select>
+                </div>
+                <div style="flex:1">
+                    <label>框架</label>
+                    <select id="framework">
+                        <option value="none">无</option>
+                        <option value="spring-boot">Spring Boot</option>
+                        <option value="fastapi">FastAPI</option>
+                        <option value="react">React</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="generateCode()">🚀 生成代码</button>
+            <div id="codeOutput" class="output" style="margin-top:16px">等待生成...</div>
+        </div>
+
+        <!-- 代码审查模块 -->
+        <div class="card">
+            <h2>🔍 代码审查</h2>
+            <label>待审查代码</label>
+            <textarea id="codeToReview" rows="6" placeholder="粘贴Java代码..."></textarea>
+            <div class="flex-row">
+                <div style="flex:1">
+                    <label>语言</label>
+                    <select id="reviewLanguage">
+                        <option value="java">Java</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                    </select>
+                </div>
+                <div style="flex:1">
+                    <label>严格模式</label>
+                    <select id="strictMode">
+                        <option value="false">否</option>
+                        <option value="true">是</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="reviewCode()">📋 开始审查</button>
+            <div id="reviewOutput" class="output" style="margin-top:16px">等待审查...</div>
+        </div>
+    </div>
+
+    <div class="row-2col">
+        <!-- 单元测试生成 -->
+        <div class="card">
+            <h2>🧪 单元测试生成</h2>
+            <label>目标代码</label>
+            <textarea id="testCode" rows="5" placeholder="输入Java类或方法代码"></textarea>
+            <label>方法名（可选）</label>
+            <input id="methodName" placeholder="例如：calculateSum">
+            <button onclick="generateTest()">✅ 生成JUnit5测试</button>
+            <div id="testOutput" class="output" style="margin-top:16px">等待生成...</div>
+        </div>
+
+        <!-- 多轮对话（RAG） -->
+        <div class="card">
+            <h2>💬 AI 对话助手</h2>
+            <div id="chatMessages" class="output" style="height: 200px; overflow-y: auto; margin-bottom: 12px;">
+                欢迎！输入问题开始对话...
+            </div>
+            <textarea id="chatInput" rows="2" placeholder="问任何关于编程的问题..."></textarea>
+            <button onclick="sendMessage()">📤 发送</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 修改为相对路径，配合 Spring Boot 同源访问
+    const API_BASE = '/api';
+
+    // 通用请求函数
+    async function request(url, body) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const result = await response.json();
+        if (result.code !== 200) {
+            throw new Error(result.message || '请求失败');
+        }
+        return result.data;
+    }
+
+    // 代码生成
+    async function generateCode() {
+        const requirement = document.getElementById('requirement').value;
+        if (!requirement) {
+            alert('请输入需求描述');
+            return;
+        }
+        const language = document.getElementById('language').value;
+        const framework = document.getElementById('framework').value;
+        const outputDiv = document.getElementById('codeOutput');
+        outputDiv.innerText = '⏳ 生成中，请稍候...';
+        try {
+            const data = await request(`${API_BASE}/code/generate`, {
+                requirement,
+                language,
+                framework,
+                needExplanation: true
+            });
+            outputDiv.innerText = data.code || data.explanation || '生成结果为空';
+        } catch (err) {
+            outputDiv.innerText = '❌ ' + err.message;
+        }
+    }
+
+    // 代码审查
+    async function reviewCode() {
+        const code = document.getElementById('codeToReview').value;
+        if (!code) {
+            alert('请输入待审查代码');
+            return;
+        }
+        const language = document.getElementById('reviewLanguage').value;
+        const strictMode = document.getElementById('strictMode').value === 'true';
+        const outputDiv = document.getElementById('reviewOutput');
+        outputDiv.innerText = '⏳ 审查中...';
+        try {
+            const data = await request(`${API_BASE}/review/review`, { code, language, strictMode });
+            let reviewText = `综合评分: ${data.overallScore}/100\n严重问题: ${data.criticalIssues?.length || 0} 个\n警告: ${data.warnings?.length || 0} 个\n建议: ${data.suggestions?.join('; ') || '无'}`;
+            if (data.fixedCode) {
+                reviewText += `\n\n优化后的代码:\n${data.fixedCode}`;
+            }
+            outputDiv.innerText = reviewText;
+        } catch (err) {
+            outputDiv.innerText = '❌ ' + err.message;
+        }
+    }
+
+    // 单元测试生成
+    async function generateTest() {
+        const code = document.getElementById('testCode').value;
+        if (!code) {
+            alert('请输入代码');
+            return;
+        }
+        const methodName = document.getElementById('methodName').value;
+        const outputDiv = document.getElementById('testOutput');
+        outputDiv.innerText = '⏳ 生成测试代码...';
+        try {
+            const data = await request(`${API_BASE}/test/generate`, {
+                code,
+                methodName: methodName || 'unknownMethod',
+                returnType: 'void',
+                parameterTypes: []
+            });
+            outputDiv.innerText = data.testCode || '生成失败';
+        } catch (err) {
+            outputDiv.innerText = '❌ ' + err.message;
+        }
+    }
+
+    // 简单对话（调用代码生成接口做通用问答）
+    async function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        if (!message) return;
+        const chatDiv = document.getElementById('chatMessages');
+        // 显示用户消息
+        chatDiv.innerText += `\n👤 用户: ${message}\n🤖 AI: `;
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+        input.value = '';
+
+        try {
+            const data = await request(`${API_BASE}/code/generate`, {
+                requirement: message,
+                language: 'text',
+                framework: 'none',
+                needExplanation: true
+            });
+            const reply = data.code || data.explanation || '无法回答';
+            chatDiv.innerText += `${reply}\n`;
+        } catch (err) {
+            chatDiv.innerText += `错误: ${err.message}\n`;
+        }
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+</script>
+</body>
+</html>

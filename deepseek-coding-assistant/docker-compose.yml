@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Redis 缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: deepseek-redis
+    restart: unless-stopped
+    ports:
+      - "6381:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - deepseek-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # DeepSeek 编码助手应用
+  app:
+    build: .
+    container_name: deepseek-app
+    restart: unless-stopped
+    ports:
+      - "8008:8080"
+    environment:
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SERVER_PORT=${SERVER_PORT:-8080}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - RATE_LIMIT=${RATE_LIMIT:-30}
+      - API_TIMEOUT=${API_TIMEOUT:-60}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-deepseek-v4-pro}
+      - FALLBACK_MODEL=${FALLBACK_MODEL:-deepseek-v4-flash}
+      - JAVA_OPTS=${JAVA_OPTS:--Xms512m -Xmx1024m -XX:+UseG1GC}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - deepseek-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis-data:
+
+networks:
+  deepseek-network:
+    driver: bridge

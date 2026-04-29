@@ -1,0 +1,42 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:5s}
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  ai:
+    openai:
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: ${DEFAULT_MODEL:deepseek-v4-pro}
+          temperature: 0.2
+          max-tokens: 8192
+
+coding-assistant:
+  api:
+    rate-limit: ${RATE_LIMIT:30}
+    timeout: ${API_TIMEOUT:60}
+  model:
+    fallback-model: ${FALLBACK_MODEL:deepseek-v4-flash}
+    default-model: ${DEFAULT_MODEL:deepseek-v4-pro}
+  cache:
+    ttl: 3600
+
+# 开启 Actuator 健康检查端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
