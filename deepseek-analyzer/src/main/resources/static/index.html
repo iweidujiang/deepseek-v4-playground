@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek V4 源码分析助手</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .author-info {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .author-info a {
+            color: #ffd966;
+            text-decoration: none;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            padding: 28px;
+            margin-bottom: 28px;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        button {
+            background: #2a5298;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+        }
+        button:hover {
+            background: #1e3c72;
+            transform: translateY(-2px);
+        }
+        pre {
+            background: #1e1e2f;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 16px;
+            overflow-x: auto;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+        .loading {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+        .error {
+            background: #ffebee;
+            color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔍 DeepSeek V4 · 智能源码分析助手</h1>
+    <div class="author-info">
+        作者：苏渡苇 · <a href="https://github.com/iweidujiang" target="_blank">GitHub</a> · 公众号：苏渡苇
+    </div>
+
+    <div class="card">
+        <label>📁 项目绝对路径</label>
+        <input type="text" id="projectPath" placeholder="例如: D:/spring-security 或 /Users/xxx/spring-cloud-gateway" value="D:/test/spring-security">
+
+        <label>🔧 分析模式</label>
+        <select id="mode">
+            <option value="summary">智能摘要模式（省 token，快速）</option>
+            <option value="full">全量代码模式（深度分析，消耗更多 token）</option>
+        </select>
+
+        <button id="analyzeBtn">🚀 开始分析</button>
+
+        <div id="resultArea">
+            <pre id="output">等待分析...</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const outputPre = document.getElementById('output');
+
+    analyzeBtn.addEventListener('click', async () => {
+        const projectPath = document.getElementById('projectPath').value.trim();
+        const mode = document.getElementById('mode').value;
+
+        if (!projectPath) {
+            outputPre.innerText = '❌ 请填写项目路径';
+            return;
+        }
+
+        outputPre.innerText = '⏳ 正在扫描源码并调用 DeepSeek V4，请耐心等待（可能需要 30~60 秒）...';
+        analyzeBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectPath, mode })
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            const report = await response.json();
+            outputPre.innerText = JSON.stringify(report, null, 2);
+        } catch (err) {
+            outputPre.innerText = `❌ 分析失败: ${err.message}`;
+        } finally {
+            analyzeBtn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

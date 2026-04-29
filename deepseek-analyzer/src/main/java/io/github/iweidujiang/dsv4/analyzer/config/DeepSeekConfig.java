@@ -1,4 +1,4 @@
-package io.github.iweidujiang.dsv4.config;
+package io.github.iweidujiang.dsv4.analyzer.config;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -9,14 +9,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-/**
- * 核心配置类
- * <p>
+/*
  * Copyright (c) 2026, 苏渡苇. All rights reserved.
- * <p>
+ *
+ * 核心配置类
+ *
+ * 项目名称：deepseek-coding-assistant
+ * 创建时间：2026-04-27 23:35
  * 作者：苏渡苇
  * 公众号：苏渡苇
- * <a href="https://github.com/iweidujiang">GitHub</a>
+ * GitHub：https://github.com/iweidujiang
  */
 @Configuration
 public class DeepSeekConfig {

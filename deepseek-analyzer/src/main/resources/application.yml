@@ -1,0 +1,22 @@
+spring:
+  ai:
+    openai:
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: ${DEEPSEEK_MODEL:deepseek-v4-pro}  # 默认模型，可通过环境变量覆盖
+          temperature: 0.1
+          max-tokens: 8192
+
+# 自定义配置：多模型与降级
+deepseek:
+  models:
+    primary: ${DEEPSEEK_MODEL_PRIMARY:deepseek-v4-pro}
+    fallback: ${DEEPSEEK_MODEL_FALLBACK:deepseek-v4-flash}
+  retry:
+    max-attempts: 2
+    backoff-millis: 1000
+
+server:
+  port: 8080
