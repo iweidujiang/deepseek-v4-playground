@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 /*
  * Copyright (c) 2026, 苏渡苇. All rights reserved.
  *
- * 统一响应格式
- *
  * 项目名称：deepseek-coding-assistant
  * 创建时间：2026-04-27 22:38
  * 作者：苏渡苇
