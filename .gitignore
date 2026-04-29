@@ -15,3 +15,5 @@
 
 ### VS Code ###
 .vscode/
+
+./**/target/
