@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek V4 · SQL 智能生成与优化引擎</title>
+    <style>
+        body {
+            font-family: system-ui, 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+        }
+        .author {
+            text-align: center;
+            color: #5a6e8a;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin: 12px 0 6px;
+        }
+        textarea, input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        button {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        button:hover {
+            background: #1e3c72;
+        }
+        pre {
+            background: #1e1e2f;
+            color: #f8f8f2;
+            padding: 16px;
+            border-radius: 16px;
+            overflow-x: auto;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+        .result-section {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🤖 DeepSeek V4 · SQL 智能引擎</h1>
+    <div class="author">
+        作者：苏渡苇 · <a href="https://github.com/iweidujiang" target="_blank">GitHub</a> · 公众号：苏渡苇
+    </div>
+
+    <div class="card">
+        <label>📝 中文需求</label>
+        <textarea id="nlInput" rows="3" placeholder="例如：查询近30天每个品类的销售额排行，排除退货订单"></textarea>
+
+        <label>🤖 模型选择</label>
+        <select id="model">
+            <option value="deepseek-v4-pro">DeepSeek V4 Pro（精度高，推荐）</option>
+            <option value="deepseek-v4-flash">DeepSeek V4 Flash（速度快，成本低）</option>
+        </select>
+
+        <label>🗄️ 数据库方言</label>
+        <select id="dialect">
+            <option value="mysql">MySQL</option>
+            <option value="postgresql">PostgreSQL</option>
+            <option value="oracle">Oracle</option>
+        </select>
+
+        <label>⚙️ 启用优化分析</label>
+        <select id="enableOptimize">
+            <option value="true">是（执行 EXPLAIN 并优化）</option>
+            <option value="false">否（仅生成 SQL）</option>
+        </select>
+
+        <button id="generateBtn">🚀 生成 SQL 并优化</button>
+
+        <div class="result-section">
+            <label>📄 生成的 SQL</label>
+            <pre id="sqlOutput">等待生成...</pre>
+
+            <label>🔍 EXPLAIN 执行计划</label>
+            <pre id="explainOutput">-</pre>
+
+            <label>⚡ 优化建议 & 索引 DDL</label>
+            <pre id="adviceOutput">-</pre>
+        </div>
+    </div>
+
+    <div id="dialectWarning" style="color: #d9534f; font-size: 13px; margin-top: 5px; display: none;">
+        ⚠️ 当前仅 MySQL 已实现完整测试，PostgreSQL / Oracle 扩展开发中，欢迎 PR。
+    </div>
+</div>
+
+<script>
+    const generateBtn = document.getElementById('generateBtn');
+    const nlInput = document.getElementById('nlInput');
+    const dialectSelect = document.getElementById('dialect');
+    const modelSelect = document.getElementById('model');
+    const enableOptimize = document.getElementById('enableOptimize');
+    const sqlOutput = document.getElementById('sqlOutput');
+    const explainOutput = document.getElementById('explainOutput');
+    const adviceOutput = document.getElementById('adviceOutput');
+
+    // 监听方言变化，给出提示
+    dialectSelect.addEventListener('change', () => {
+        const val = dialectSelect.value;
+        if (val !== 'mysql') {
+            dialectSelect.style.display = 'block';
+        } else {
+            dialectSelect.style.display = 'none';
+        }
+    });
+
+    generateBtn.addEventListener('click', async () => {
+        const dialect = dialectSelect.value;
+        if (dialect !== 'mysql') {
+            alert('当前版本仅支持 MySQL 数据库。如果您需要 PostgreSQL/Oracle 支持，请参考 GitHub 项目自行扩展。');
+            return;
+        }
+        const naturalLanguage = nlInput.value.trim();
+        if (!naturalLanguage) {
+            alert('请输入中文需求');
+            return;
+        }
+        const model = modelSelect.value;
+
+        sqlOutput.innerText = '⏳ 调用 DeepSeek V4 生成 SQL...';
+        explainOutput.innerText = '-';
+        adviceOutput.innerText = '-';
+        generateBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/sql/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    naturalLanguage: naturalLanguage,
+                    dialect: dialect.value,
+                    model: model,
+                    enableOptimize: enableOptimize.value === 'true'
+                })
+            });
+            const data = await response.json();
+            sqlOutput.innerText = data.generatedSql || '生成失败';
+            if (data.explainResult) {
+                explainOutput.innerText = data.explainResult;
+            }
+            if (data.optimizationAdvice) {
+                adviceOutput.innerText = `优化建议：${data.optimizationAdvice}\n\n索引DDL：${data.indexDdl || '无'}`;
+            }
+            if (data.error) {
+                adviceOutput.innerText = `错误：${data.error}`;
+            }
+        } catch (err) {
+            sqlOutput.innerText = `请求失败：${err.message}`;
+        } finally {
+            generateBtn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

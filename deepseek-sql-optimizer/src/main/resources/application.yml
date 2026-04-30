@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/demo-sql?useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 111111
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+  ai:
+    openai:
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-v4-pro
+          temperature: 0.2
+          max-tokens: 4096
+
+deepseek:
+  sql:
+    dialect: mysql   # 可扩展支持 mysql, postgresql, oracle
+  retry:
+    max-attempts: 2
+
+server:
+  port: 8080
