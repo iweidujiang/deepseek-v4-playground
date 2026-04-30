@@ -74,7 +74,7 @@ public class SqlGenerateService {
                     .content();
 
             Map<String, String> genMap = objectMapper.readValue(extractJson(generateResp), Map.class);
-            String generatedSql = genMap.get("sql");
+            String generatedSql = genMap.get("db");
             builder.generatedSql(generatedSql);
 
             if (!optimize) {
